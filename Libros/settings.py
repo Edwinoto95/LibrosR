@@ -1,4 +1,3 @@
-# Libros/settings.py
 import os
 from pathlib import Path
 import django
@@ -14,7 +13,7 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 # ALLOWED_HOSTS debe incluir el hostname que Render asigna a tu app
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
 if not ALLOWED_HOSTS:
-    # Si no está configurado, para desarrollo permite localhost
+    # Para desarrollo local
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
