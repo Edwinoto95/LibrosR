@@ -1,0 +1,110 @@
+{% extends 'plantilla.html' %}
+
+{% block title %}{{ titulo_form }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+  <div class="col-md-8 col-lg-7">
+    <div class="card border rounded-3 shadow-sm" style="border: 3px solid #6c757d;">
+      <div class="card-header bg-white text-center rounded-top-3 py-3" style="border: 3px solid #6c757d; border-bottom: none; border-radius: 0.75rem 0.75rem 0 0;">
+        <h3 class="mb-0 fw-semibold text-dark">{{ titulo_form }}</h3>
+      </div>
+      <div class="card-body p-5" style="border: 3px solid #6c757d; border-top: none; border-radius: 0 0 0.75rem 0.75rem;">
+        <form method="post" id="form-editorial" novalidate style="border: 2px solid #6c757d; padding: 1.5rem; border-radius: 0.5rem;">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label for="nombre_editorial" class="form-label fw-semibold fs-5">Nombre de la Editorial</label>
+            <input
+              type="text"
+              class="form-control form-control-lg border-2 border-secondary"
+              id="nombre_editorial"
+              name="nombre_editorial"
+              value="{% if editorial %}{{ editorial.nombre_editorial }}{% endif %}"
+              placeholder=""
+              required
+              autocomplete="off"
+              style="box-shadow: none;"
+            />
+            <div class="invalid-feedback" style="display:none; color: #dc3545;">
+              Por favor, ingresa un nombre válido (mínimo 2 caracteres).
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-center" style="gap: 20px; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-success px-5 fw-semibold rounded">
+              Guardar
+            </button>
+            <a href="{% url 'lista_editoriales' %}" class="btn btn-danger px-5 fw-semibold rounded">
+              Cancelar
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Card con borde visible */
+  .card {
+    border-style: solid !important;
+  }
+
+  /* Botones simples y elegantes */
+  .btn-success {
+    background-color: #28a745;
+    border: none;
+    transition: background-color 0.25s ease;
+  }
+  .btn-success:hover, .btn-success:focus {
+    background-color: #218838;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border: none;
+    transition: background-color 0.25s ease;
+  }
+  .btn-danger:hover, .btn-danger:focus {
+    background-color: #c82333;
+  }
+
+  /* Input con borde visible */
+  .form-control {
+    border-width: 2px !important;
+    border-color: #6c757d !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .form-control:focus {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 6px rgba(40, 167, 69, 0.4);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-editorial');
+    const inputNombre = document.getElementById('nombre_editorial');
+    const invalidFeedback = inputNombre.nextElementSibling;
+
+    form.addEventListener('submit', function (e) {
+      const valor = inputNombre.value.trim();
+      if (valor.length < 2) {
+        e.preventDefault();
+        inputNombre.classList.add('is-invalid');
+        invalidFeedback.style.display = 'block';
+      } else {
+        inputNombre.classList.remove('is-invalid');
+        invalidFeedback.style.display = 'none';
+      }
+    });
+
+    inputNombre.addEventListener('input', function () {
+      if (inputNombre.value.trim().length >= 2) {
+        inputNombre.classList.remove('is-invalid');
+        invalidFeedback.style.display = 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

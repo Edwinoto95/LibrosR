@@ -1,0 +1,220 @@
+{% extends 'plantilla.html' %}
+
+{% block title %}Lista de Autores{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>✍️ Lista de Autores</h2>
+  <a href="{% url 'crear_autor' %}" class="btn btn-success">Agregar Autor</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover datatable" id="tabla-autores">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Nacionalidad</th>
+        <th>Acciones</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for autor in autores %}
+      <tr data-autor-id="{{ autor.id }}">
+        <td>{{ autor.id }}</td>
+        <td>{{ autor.nombre_autor }}</td>
+        <td>{{ autor.nacionalidad }}</td>
+        <td class="acciones-col">
+          <a href="{% url 'editar_autor' autor.id %}" class="btn btn-sm btn-warning">Editar</a>
+          <button 
+            class="btn btn-sm btn-danger btn-eliminar" 
+            data-url="{% url 'eliminar_autor' autor.id %}" 
+            data-nombre="{{ autor.nombre_autor }}">
+            Eliminar
+          </button>
+        </td>
+        <td>
+          <div class="form-check form-switch d-flex align-items-center gap-2">
+            <input class="form-check-input toggle-acciones" type="checkbox" id="toggleAcciones{{ autor.id }}" checked>
+            <label class="form-check-label" for="toggleAcciones{{ autor.id }}" style="user-select:none;">
+              <span class="estado-text">Activado</span>
+            </label>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center">No hay autores registrados</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // iziToast para mensajes de Django
+    {% if messages %}
+      {% for message in messages %}
+        iziToast.{{ message.tags|default:"info" }}({
+          title: '{{ message.tags|title }}',
+          message: '{{ message|escapejs }}',
+          position: 'topRight',
+          timeout: 5000
+        });
+      {% endfor %}
+    {% endif %}
+
+    // Confirmación personalizada con iziToast para eliminar
+    $('.btn-eliminar').on('click', function(e) {
+      e.preventDefault();
+
+      const $row = $(this).closest('tr');
+      const toggle = $row.find('.toggle-acciones');
+      if (!toggle.prop('checked')) {
+        // Si toggle está desactivado, no permitir eliminar
+        return;
+      }
+
+      const url = $(this).data('url');
+      const nombre = $(this).data('nombre');
+      iziToast.question({
+        timeout: 20000,
+        close: false,
+        overlay: true,
+        displayMode: 'once',
+        id: 'confirm-delete',
+        zindex: 999,
+        title: 'Confirmar eliminación',
+        message: `¿Estás seguro de que deseas eliminar el autor? Esto también eliminará todos los libros que estén registrados bajo él. <b>${nombre}</b>?`,
+        position: 'center',
+        buttons: [
+          ['<button><b>Sí, eliminar</b></button>', function (instance, toast) {
+            window.location.href = url;
+            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+          }, true],
+          ['<button>Cancelar</button>', function (instance, toast) {
+            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+          }]
+        ]
+      });
+    });
+
+    // Función para actualizar estado visual y guardar en localStorage
+    function actualizarEstadoToggle($toggle) {
+      const $row = $toggle.closest('tr');
+      const acciones = $row.find('.acciones-col');
+      const estadoText = $row.find('.estado-text');
+      const autorId = $row.data('autor-id');
+      const activado = $toggle.prop('checked');
+
+      if (activado) {
+        acciones.show();
+        estadoText.text('Activado');
+      } else {
+        acciones.hide();
+        estadoText.text('Desactivado');
+      }
+
+      // Guardar estado en localStorage
+      localStorage.setItem('autor_estado_' + autorId, activado ? 'true' : 'false');
+    }
+
+    // Al cambiar toggle, actualizar estado y guardar
+    $('.toggle-acciones').on('change', function() {
+      actualizarEstadoToggle($(this));
+    });
+
+    // Al cargar la página, restaurar estados desde localStorage
+    $('.toggle-acciones').each(function() {
+      const $toggle = $(this);
+      const $row = $toggle.closest('tr');
+      const autorId = $row.data('autor-id');
+      const estadoGuardado = localStorage.getItem('autor_estado_' + autorId);
+
+      if (estadoGuardado === 'false') {
+        $toggle.prop('checked', false);
+      } else {
+        $toggle.prop('checked', true);
+      }
+      actualizarEstadoToggle($toggle);
+    });
+
+    // Inicializar DataTables con exportación correcta y exclusión de la columna Estado en PDF e impresión
+    $('#tabla-autores').DataTable({
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+      },
+      dom: "<'d-flex justify-content-between mb-3'<'dt-buttons'B><'dataTables_filter'f>>" +
+           "<'table-responsive'tr>" +
+           "<'d-flex justify-content-between mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
+      buttons: [
+        {
+          extend: 'copy',
+          exportOptions: {
+            columns: [0,1,2,4],
+            format: {
+              body: function(data, row, column, node) {
+                if(column === 4){
+                  var estadoTexto = $(node).find('.estado-text').text();
+                  return estadoTexto ? estadoTexto.trim() : 'Activado';
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'csv',
+          exportOptions: {
+            columns: [0,1,2,4],
+            format: {
+              body: function(data, row, column, node) {
+                if(column === 4){
+                  var estadoTexto = $(node).find('.estado-text').text();
+                  return estadoTexto ? estadoTexto.trim() : 'Activado';
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'excel',
+          exportOptions: {
+            columns: [0,1,2,4],
+            format: {
+              body: function(data, row, column, node) {
+                if(column === 4){
+                  var estadoTexto = $(node).find('.estado-text').text();
+                  return estadoTexto ? estadoTexto.trim() : 'Activado';
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'pdf',
+          exportOptions: {
+            columns: [0,1,2], // Excluir columna Estado en PDF
+          }
+        },
+        {
+          extend: 'print',
+          exportOptions: {
+            columns: [0,1,2], // Excluir columna Estado en impresión
+          }
+        },
+        'colvis'
+      ],
+      responsive: true,
+      retrieve: true,
+      order: [[0, 'desc']]
+    });
+  });
+</script>
+{% endblock %}

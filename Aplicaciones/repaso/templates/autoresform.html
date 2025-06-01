@@ -1,0 +1,142 @@
+{% extends 'plantilla.html' %}
+
+{% block title %}{{ titulo_form }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border rounded-3 shadow-sm" style="border: 3px solid #6c757d;">
+      <div class="card-header bg-white text-center rounded-top-3 py-3" style="border: 3px solid #6c757d; border-bottom: none; border-radius: 0.75rem 0.75rem 0 0;">
+        <h3 class="mb-0 fw-semibold text-dark">{{ titulo_form }}</h3>
+      </div>
+      <div class="card-body p-4" style="border: 3px solid #6c757d; border-top: none; border-radius: 0 0 0.75rem 0.75rem;">
+        <form method="post" id="form-autor" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="nombre_autor" class="form-label fw-semibold">Nombre del Autor</label>
+            <input
+              type="text"
+              class="form-control"
+              id="nombre_autor"
+              name="nombre_autor"
+              value="{% if autor %}{{ autor.nombre_autor }}{% endif %}"
+              required
+              autocomplete="off"
+            />
+            <div class="invalid-feedback" style="display:none; color: #dc3545;">
+              Por favor, ingresa un nombre válido (mínimo 2 caracteres).
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="nacionalidad" class="form-label fw-semibold">Nacionalidad</label>
+            <input
+              type="text"
+              class="form-control"
+              id="nacionalidad"
+              name="nacionalidad"
+              value="{% if autor %}{{ autor.nacionalidad }}{% endif %}"
+              required
+              autocomplete="off"
+            />
+            <div class="invalid-feedback" style="display:none; color: #dc3545;">
+              Por favor, ingresa una nacionalidad válida (mínimo 2 caracteres).
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-center gap-4 mt-5">
+            <button type="submit" class="btn btn-success px-4 fw-semibold rounded">
+              Guardar
+            </button>
+            <a href="{% url 'lista_autores' %}" class="btn btn-danger px-4 fw-semibold rounded">
+              Cancelar
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Card con borde visible */
+  .card {
+    border-style: solid !important;
+  }
+
+  /* Inputs con borde visible y validación */
+  .form-control {
+    border-width: 2px !important;
+    border-color: #6c757d !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .form-control:focus {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 6px rgba(40, 167, 69, 0.4);
+  }
+  .is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 6px rgba(220, 53, 69, 0.5);
+  }
+
+  /* Mensajes de error */
+  .invalid-feedback {
+    font-weight: 600;
+  }
+
+  /* Botones */
+  .btn-success {
+    background-color: #28a745;
+    border: none;
+    transition: background-color 0.25s ease;
+  }
+  .btn-success:hover, .btn-success:focus {
+    background-color: #218838;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border: none;
+    transition: background-color 0.25s ease;
+  }
+  .btn-danger:hover, .btn-danger:focus {
+    background-color: #b02a37;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-autor');
+    const nombreInput = document.getElementById('nombre_autor');
+    const nacionalidadInput = document.getElementById('nacionalidad');
+
+    const invalidNombre = nombreInput.nextElementSibling;
+    const invalidNacionalidad = nacionalidadInput.nextElementSibling;
+
+    function validateTextInput(input, invalidDiv) {
+      if (input.value.trim().length < 2) {
+        input.classList.add('is-invalid');
+        invalidDiv.style.display = 'block';
+        return false;
+      } else {
+        input.classList.remove('is-invalid');
+        invalidDiv.style.display = 'none';
+        return true;
+      }
+    }
+
+    form.addEventListener('submit', function (e) {
+      let valid = true;
+      valid &= validateTextInput(nombreInput, invalidNombre);
+      valid &= validateTextInput(nacionalidadInput, invalidNacionalidad);
+
+      if (!valid) {
+        e.preventDefault();
+      }
+    });
+
+    nombreInput.addEventListener('input', () => validateTextInput(nombreInput, invalidNombre));
+    nacionalidadInput.addEventListener('input', () => validateTextInput(nacionalidadInput, invalidNacionalidad));
+  });
+</script>
+{% endblock %}

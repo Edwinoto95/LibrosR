@@ -1,0 +1,296 @@
+
+{% extends 'plantilla.html' %}
+
+{% load static %}
+{% block title %}Inicio - Sistema de Libros{% endblock %}
+
+{% block content %}
+
+<!-- Slider Section -->
+<section id="slider" class="slider section dark-background">
+  <div class="container" data-aos="fade-up" data-aos-delay="100">
+    <div class="swiper init-swiper">
+      <div class="swiper-wrapper">
+
+        <div class="swiper-slide" style="background-image: url('{% static "plantilla/assets/img/libro1.jpg" %}');">
+          <div class="content" style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; color: white;">
+            <h2><a href="single-post.html" style="color: white; text-decoration: none;">"Cien Años de Soledad" - Gabriel García Márquez</a></h2>
+            <p>Publicado en 1967, género: Realismo mágico, editorial: Sudamericana.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide" style="background-image: url('{% static "plantilla/assets/img/imagen2.jpg" %}');">
+          <div class="content" style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; color: white;">
+            <h2><a href="single-post.html" style="color: white; text-decoration: none;">"Don Quijote de la Mancha" - Miguel de Cervantes</a></h2>
+            <p>Publicado en 1605, género: Novela de caballerías, editorial: Francisco de Robles.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide" style="background-image: url('{% static "plantilla/assets/img/imagen3.jpg" %}');">
+          <div class="content" style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; color: white;">
+            <h2><a href="single-post.html" style="color: white; text-decoration: none;">"La Sombra del Viento" - Carlos Ruiz Zafón</a></h2>
+            <p>Publicado en 2001, género: Misterio, editorial: Planeta.</p>
+          </div>
+        </div>
+
+        <div class="swiper-slide" style="background-image: url('{% static "plantilla/assets/img/imagen4.jpg" %}');">
+          <div class="content" style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; color: white;">
+            <h2><a href="single-post.html" style="color: white; text-decoration: none;">"El Amor en los Tiempos del Cólera" - Gabriel García Márquez</a></h2>
+            <p>Publicado en 1985, género: Romance, editorial: Oveja Negra.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Navegación -->
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+
+      <!-- Paginación -->
+      <div class="swiper-pagination"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const swiper = new Swiper('.init-swiper', {
+      loop: true,
+      speed: 600,
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false,
+      },
+      slidesPerView: 'auto',
+      centeredSlides: true,
+      pagination: {
+        el: '.swiper-pagination',
+        type: 'bullets',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+    });
+  });
+</script>
+
+
+
+<h1 style="font-size: 4rem; text-align: center; margin: 0 auto; display: block; width: 100%;">Dashboard de Libros</h1>
+
+
+<style>
+  .charts-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  .chart-box {
+    flex: 1 1 45%;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .chart-box canvas {
+    width: 100% !important;
+    height: 250px !important;
+  }
+</style>
+
+<div class="charts-container">
+
+  <div class="chart-box">
+    <h3>Libros por Autores</h3>
+    <canvas id="autoresChart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Género Literario Más Popular (Top 1)</h3>
+    <canvas id="generoTop1Chart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Géneros Literarios (Top 3)</h3>
+    <canvas id="generosTop3Chart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Editorial con Más Libros Publicados (Top 1)</h3>
+    <canvas id="editorialTop1Chart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Editoriales (Top 3)</h3>
+    <canvas id="editorialesTop3Chart"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Libros Publicados por Año</h3>
+    <canvas id="añosChart"></canvas>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const labelsAutores = {{ labels_autores|safe }};
+  const dataAutores = {{ data_autores|safe }};
+
+  const labelsGeneroTop1 = {{ labels_genero_top1|safe }};
+  const dataGeneroTop1 = {{ data_genero_top1|safe }};
+
+  const labelsGenerosTop3 = {{ labels_generos_top3|safe }};
+  const dataGenerosTop3 = {{ data_generos_top3|safe }};
+
+  const labelsEditorialTop1 = {{ labels_editorial_top1|safe }};
+  const dataEditorialTop1 = {{ data_editorial_top1|safe }};
+
+  const labelsEditorialesTop3 = {{ labels_editoriales_top3|safe }};
+  const dataEditorialesTop3 = {{ data_editoriales_top3|safe }};
+
+  const labelsAños = {{ labels_años|safe }};
+  const dataAños = {{ data_años|safe }};
+
+  function createBarChart(ctx, labels, data, horizontal=false, colors=null) {
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total de Libros',
+          data: data,
+          backgroundColor: colors || 'rgba(54, 162, 235, 0.6)',
+          borderColor: colors ? colors.map(c => c.replace('0.6', '1')) : 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: horizontal ? 'y' : 'x',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { beginAtZero: true },
+          y: { beginAtZero: true }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  function createDoughnutChart(ctx, labels, data, colors) {
+    return new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total de Libros',
+          data: data,
+          backgroundColor: colors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right' }
+        }
+      }
+    });
+  }
+
+  function createLineChart(ctx, labels, data) {
+    return new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Total de Libros',
+          data: data,
+          fill: false,
+          borderColor: 'rgba(255, 159, 64, 1)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  createBarChart(document.getElementById('autoresChart').getContext('2d'), labelsAutores, dataAutores);
+
+  createDoughnutChart(
+    document.getElementById('generoTop1Chart').getContext('2d'),
+    labelsGeneroTop1,
+    dataGeneroTop1,
+    ['rgba(255, 99, 132, 0.6)']
+  );
+
+  createDoughnutChart(
+    document.getElementById('generosTop3Chart').getContext('2d'),
+    labelsGenerosTop3,
+    dataGenerosTop3,
+    [
+      'rgba(255, 99, 132, 0.6)',
+      'rgba(255, 206, 86, 0.6)',
+      'rgba(75, 192, 192, 0.6)'
+    ]
+  );
+
+  createBarChart(
+    document.getElementById('editorialTop1Chart').getContext('2d'),
+    labelsEditorialTop1,
+    dataEditorialTop1,
+    true,
+    ['rgba(153, 102, 255, 0.6)']
+  );
+
+   // Gráfico de barras para Libros Publicados por Año
+  createBarChart(
+    document.getElementById('añosChart').getContext('2d'),
+    labelsAños,
+    dataAños
+  );
+  createBarChart(
+    document.getElementById('editorialesTop3Chart').getContext('2d'),
+    labelsEditorialesTop3,
+    dataEditorialesTop3,
+    true,
+    [
+      'rgba(153, 102, 255, 0.6)',
+      'rgba(201, 203, 207, 0.6)',
+      'rgba(255, 159, 64, 0.6)'
+    ]
+  );
+   // Gráfico de barras para Libros Publicados por Año
+  createBarChart(
+    document.getElementById('añosChart').getContext('2d'),
+    labelsAños,
+    dataAños
+  );
+
+  createLineChart(document.getElementById('añosChart').getContext('2d'), labelsAños, dataAños);
+</script>
+
+{% endblock %}

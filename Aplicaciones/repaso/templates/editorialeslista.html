@@ -1,0 +1,222 @@
+{% extends 'plantilla.html' %}
+
+{% block title %}Lista de Editoriales{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>🏢 Lista de Editoriales</h2>
+  <a href="{% url 'crear_editorial' %}" class="btn btn-success">Agregar Editorial</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover datatable" id="tabla-editoriales">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Nombre Editorial</th>
+        <th>Acciones</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for editorial in editoriales %}
+      <tr data-editorial-id="{{ editorial.id }}">
+        <td>{{ editorial.id }}</td>
+        <td>{{ editorial.nombre_editorial }}</td>
+        <td class="acciones-col">
+          <a href="{% url 'editar_editorial' editorial.id %}" class="btn btn-sm btn-warning">Editar</a>
+          <a href="#" class="btn btn-sm btn-danger btn-eliminar" data-url="{% url 'eliminar_editorial' editorial.id %}" data-nombre="{{ editorial.nombre_editorial }}">Eliminar</a>
+        </td>
+        <td>
+          <div class="form-check form-switch d-flex align-items-center gap-2">
+            <input class="form-check-input toggle-acciones" type="checkbox" id="toggleAcciones{{ editorial.id }}" checked>
+            <label class="form-check-label" for="toggleAcciones{{ editorial.id }}" style="user-select:none;">
+              <span class="estado-text">Activado</span>
+            </label>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-center">No hay editoriales registradas</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // iziToast para mensajes de Django
+    {% if messages %}
+      {% for message in messages %}
+        iziToast.{{ message.tags|default:"info" }}({
+          title: '{{ message.tags|title }}',
+          message: '{{ message|escapejs }}',
+          position: 'topRight',
+          timeout: 5000
+        });
+      {% endfor %}
+    {% endif %}
+
+    // Confirmación con iziToast para eliminar
+    $('.btn-eliminar').on('click', function(e) {
+      e.preventDefault();
+
+      const $row = $(this).closest('tr');
+      const toggle = $row.find('.toggle-acciones');
+      if (!toggle.prop('checked')) {
+        // Si toggle está desactivado, no permitir eliminar
+        return;
+      }
+
+      const url = $(this).data('url');
+      const nombre = $(this).data('nombre');
+      iziToast.question({
+        timeout: 20000,
+        close: false,
+        overlay: true,
+        displayMode: 'once',
+        id: 'confirm-delete',
+        zindex: 999,
+        title: 'Confirmar eliminación',
+        message: `¿Estás seguro de que deseas eliminar la editorial? Esto también eliminará todos los libros que estén registrados bajo ella. <b>${nombre}</b>?`,
+        position: 'center',
+        buttons: [
+          ['<button><b>Sí, eliminar</b></button>', function (instance, toast) {
+            window.location.href = url;
+            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+          }, true],
+          ['<button>Cancelar</button>', function (instance, toast) {
+            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+          }]
+        ]
+      });
+    });
+
+    // Mostrar u ocultar botones editar y eliminar según toggle
+    $('.toggle-acciones').on('change', function() {
+      const $row = $(this).closest('tr');
+      const acciones = $row.find('.acciones-col');
+      const estadoText = $row.find('.estado-text');
+
+      if ($(this).prop('checked')) {
+        acciones.show();
+        estadoText.text('Activado');
+      } else {
+        acciones.hide();
+        estadoText.text('Desactivado');
+      }
+    });
+
+    // Guardar y restaurar estado en localStorage para persistencia
+    function actualizarEstadoToggle($toggle) {
+      const $row = $toggle.closest('tr');
+      const acciones = $row.find('.acciones-col');
+      const estadoText = $row.find('.estado-text');
+      const editorialId = $row.data('editorial-id');
+      const activado = $toggle.prop('checked');
+
+      if (activado) {
+        acciones.show();
+        estadoText.text('Activado');
+      } else {
+        acciones.hide();
+        estadoText.text('Desactivado');
+      }
+
+      localStorage.setItem('editorial_estado_' + editorialId, activado ? 'true' : 'false');
+    }
+
+    $('.toggle-acciones').on('change', function() {
+      actualizarEstadoToggle($(this));
+    });
+
+    $('.toggle-acciones').each(function() {
+      const $toggle = $(this);
+      const $row = $toggle.closest('tr');
+      const editorialId = $row.data('editorial-id');
+      const estadoGuardado = localStorage.getItem('editorial_estado_' + editorialId);
+
+      if (estadoGuardado === 'false') {
+        $toggle.prop('checked', false);
+      } else {
+        $toggle.prop('checked', true);
+      }
+      actualizarEstadoToggle($toggle);
+    });
+
+    // Inicializar DataTables con exportación correcta y exclusión de la columna Estado en PDF y Print
+    $('#tabla-editoriales').DataTable({
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+      },
+      dom: "<'d-flex justify-content-between mb-3'<'dt-buttons'B><'dataTables_filter'f>>" +
+           "<'table-responsive'tr>" +
+           "<'d-flex justify-content-between mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
+      buttons: [
+        {
+          extend: 'copy',
+          exportOptions: {
+            columns: [0,1,3],
+            format: {
+              body: function(data, row, column, node) {
+                if(column === 3){
+                  return $(node).find('.estado-text').text() || data;
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'csv',
+          exportOptions: {
+            columns: [0,1,3],
+            format: {
+              body: function(data, row, column, node) {
+                if(column === 3){
+                  return $(node).find('.estado-text').text() || data;
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'excel',
+          exportOptions: {
+            columns: [0,1,3],
+            format: {
+              body: function(data, row, column, node) {
+                if(column === 3){
+                  return $(node).find('.estado-text').text() || data;
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'pdf',
+          exportOptions: {
+            columns: [0,1], // Excluir columna Estado (índice 3) en PDF
+          }
+        },
+        {
+          extend: 'print',
+          exportOptions: {
+            columns: [0,1], // Excluir columna Estado en impresión
+          }
+        },
+        'colvis'
+      ],
+      responsive: true,
+      retrieve: true,
+      order: [[0, 'desc']]
+    });
+  });
+</script>
+{% endblock %}
