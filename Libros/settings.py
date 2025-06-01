@@ -5,11 +5,17 @@ import django
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Seguridad
+# Seguridad: obtener SECRET_KEY de variable de entorno para no exponerla en el código
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-key-for-development')
-DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'  # Cambiar a False en producción
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if not DEBUG else []
+# DEBUG debe ser False en producción; Render define la variable RENDER para detectar entorno
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+
+# ALLOWED_HOSTS debe incluir el hostname que Render asigna a tu app
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+if not ALLOWED_HOSTS:
+    # Si no está configurado, para desarrollo permite localhost
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,7 +29,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Para servir archivos estáticos en producción
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Para servir estáticos en producción
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -50,14 +56,14 @@ TEMPLATES = [
     },
 ]
 
-# Configuración base de datos MySQL con variables de entorno para seguridad
+# Configuración base de datos MySQL con variables de entorno
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('MYSQL_DATABASE', 'Libros'),
         'USER': os.getenv('MYSQL_USER', 'root'),
         'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
-        # Cambia 'localhost' por el host remoto de tu base de datos MySQL
+        # IMPORTANTE: Cambia 'localhost' por el host remoto de tu base de datos MySQL en Render o externa
         'HOST': os.getenv('MYSQL_HOST', 'localhost'),
         'PORT': os.getenv('MYSQL_PORT', '3306'),
         'OPTIONS': {
@@ -80,11 +86,11 @@ USE_TZ = True
 
 # Archivos estáticos
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Carpeta donde collectstatic guarda los archivos
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'Libros', 'static'),
+    os.path.join(BASE_DIR, 'Libros', 'static'),  # Carpeta con tus archivos estáticos locales
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # WhiteNoise para producción
 
 # Campo por defecto para modelos
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
