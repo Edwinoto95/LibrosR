@@ -1,4 +1,3 @@
-
 set -o errexit
 
 echo "Actualizando pip..."
