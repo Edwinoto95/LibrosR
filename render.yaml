@@ -1,0 +1,37 @@
+# render.yaml
+services:
+  - type: web
+    name: tu-app-django           # Cambia por el nombre que quieras para tu app en Render
+    env: python
+    plan: free                    # Puedes cambiar a plan standard si necesitas más recursos
+    region: oregon                # Cambia por la región que prefieras
+    branch: main                  # Rama de Git que quieres desplegar
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn Libros.wsgi:application  # Cambia 'Libros' por el nombre de tu proyecto Django
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: MYSQL_DATABASE
+        value: "nombre_basedatos"          # Cambia por tu base de datos
+      - key: MYSQL_USER
+        value: "usuario_mysql"             # Cambia por tu usuario MySQL
+      - key: MYSQL_PASSWORD
+        value: "contraseña_mysql"          # Cambia por tu contraseña MySQL
+      - key: MYSQL_HOST
+        value: "host_mysql"                # Cambia por el host MySQL (ej. db-xxxx.mysql.render.com)
+      - key: MYSQL_PORT
+        value: "3306"
+
+databases:
+  - name: mysql-db                   # Nombre interno para la base de datos en Render
+    plan: free                      # Plan gratuito, cambia si necesitas más recursos
+    region: oregon                  # Debe coincidir con la región del servicio web
+    databaseName: nombre_basedatos  # Nombre de la base de datos
+    user: usuario_mysql             # Usuario MySQL
+    # La contraseña se genera automáticamente, puedes cambiarla en el dashboard de Render
+
